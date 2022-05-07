@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const { response } = require("express");
+const jwt = require('jsonwebtoken');
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 const app = express();
@@ -39,9 +40,25 @@ async function run() {
     //post api
     app.post('/item',async(req, res)=>{
       const newItem = req.body;
-      const result = await itemCollection.insertOne(newItem);
-      res.send(result);
+      const tokenInfo = req.headers.authorization;
+      console.log(tokenInfo)
+      const [email, accessToken] = tokenInfo.split(" ")
+      const decoded = verifyToken(accessToken);
+      
+      if (email === decoded.email){
+        const result = await itemCollection.insertOne(newItem);
+        res.send(result);
+      } else{
+        res.send({success: 'UnAuthoraized Access'})
+      }
     });
+
+    // Jwt post api
+    app.post('/login', async (req, res)=>{
+      const email = req.body;
+      const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET);
+      res.send({token})
+    })
 
     //Delete Api
     app.delete('/item/:id', async(req, res)=>{
@@ -70,6 +87,22 @@ async function run() {
 
   }
 }
+
+//verify token
+function verifyToken(token){
+  let email;
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function(err, decoded){
+    if(err){
+      email = "Invalid Email"
+    }
+    if (decoded){
+      console.log(decoded)
+      email = decoded
+    }
+  })
+  return email ;
+}
+
 run().catch(console.dir);
 
 app.get("/", (req, res) => {

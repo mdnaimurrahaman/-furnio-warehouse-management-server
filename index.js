@@ -22,6 +22,7 @@ async function run() {
   try {
     await client.connect();
     const itemCollection = client.db("furnioData").collection("item");
+    // const myItemsCollection = client.db("furnioData").collection("myItems");
 
     app.get("/item", async (req, res) => {
       const query = {};
@@ -37,28 +38,60 @@ async function run() {
         res.send(item);
     })
 
+    // User my item api
+    // app.get ("/myItems", async (req, res)=>{
+    //   const tokenInfo = req.headers.authorization;
+    //   console.log(tokenInfo)
+    //   const [email, accessToken] = tokenInfo.split(" ")
+    //   const decoded = verifyToken(accessToken);
+
+    //   if (email === decoded.email){
+    //     const myItems = myItemsCollection.find({email:email}).toArray;
+    //     res.send(myItems);
+    //   } else{
+    //     res.send({success: 'UnAuthoraized Access'})
+    //   }
+    // })
+    //------------------//
+    // app.post('/myItems', async(req, res)=>{
+    //   const myItems = req.body;
+    //   const result = await myItemsCollection.insertOne(myItems);
+    //   res.send(result)
+    // })
+
+     app.get('/myItems', async (req, res)=>{
+       const email = req.query.email;
+       console.log(email)
+       const query = {email};
+       const cursor = itemCollection.find(query);
+       const myItems = await cursor.toArray();
+       res.send(myItems);
+     })
+
     //post api
     app.post('/item',async(req, res)=>{
       const newItem = req.body;
       const tokenInfo = req.headers.authorization;
       console.log(tokenInfo)
-      const [email, accessToken] = tokenInfo.split(" ")
-      const decoded = verifyToken(accessToken);
+      const result = await itemCollection.insertOne(newItem);
+      res.send(result);
+      // const [email, accessToken] = tokenInfo.split(" ")
+      // const decoded = verifyToken(accessToken);
       
-      if (email === decoded.email){
-        const result = await itemCollection.insertOne(newItem);
-        res.send(result);
-      } else{
-        res.send({success: 'UnAuthoraized Access'})
-      }
+      // if (email === decoded.email){
+      //   const result = await itemCollection.insertOne(newItem);
+      //   res.send(result);
+      // } else{
+      //   res.send({success: 'UnAuthoraized Access'})
+      // }
     });
 
-    // Jwt post api
-    app.post('/login', async (req, res)=>{
-      const email = req.body;
-      const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET);
-      res.send({token})
-    })
+    // // user login Jwt post api 
+    // app.post('/login', async (req, res)=>{
+    //   const email = req.body;
+    //   const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET);
+    //   res.send({token})
+    // })
 
     //Delete Api
     app.delete('/item/:id', async(req, res)=>{
@@ -89,19 +122,19 @@ async function run() {
 }
 
 //verify token
-function verifyToken(token){
-  let email;
-  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function(err, decoded){
-    if(err){
-      email = "Invalid Email"
-    }
-    if (decoded){
-      console.log(decoded)
-      email = decoded
-    }
-  })
-  return email ;
-}
+// function verifyToken(token){
+//   let email;
+//   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function(err, decoded){
+//     if(err){
+//       email = "Invalid Email"
+//     }
+//     if (decoded){
+//       console.log(decoded)
+//       email = decoded
+//     }
+//   })
+//   return email ;
+// }
 
 run().catch(console.dir);
 

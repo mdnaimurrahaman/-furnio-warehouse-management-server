@@ -22,8 +22,22 @@ async function run() {
   try {
     await client.connect();
     const itemCollection = client.db("furnioData").collection("item");
-    // const myItemsCollection = client.db("furnioData").collection("myItems");
 
+   // user login Jwt post api 
+   app.post('/login', async (req, res)=>{
+    const email = req.body;
+    const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET);
+    res.send({token})
+  })
+
+  //verify token
+  function verifyJWT(req, res, next){
+    const authHeader = req.headers.authorization;
+    console.log('inside verifyJWT',authHeader)
+    next();
+   }
+
+   // item api
     app.get("/item", async (req, res) => {
       const query = {};
       const cursor = itemCollection.find(query);
@@ -38,28 +52,10 @@ async function run() {
         res.send(item);
     })
 
-    // User my item api
-    // app.get ("/myItems", async (req, res)=>{
-    //   const tokenInfo = req.headers.authorization;
-    //   console.log(tokenInfo)
-    //   const [email, accessToken] = tokenInfo.split(" ")
-    //   const decoded = verifyToken(accessToken);
-
-    //   if (email === decoded.email){
-    //     const myItems = myItemsCollection.find({email:email}).toArray;
-    //     res.send(myItems);
-    //   } else{
-    //     res.send({success: 'UnAuthoraized Access'})
-    //   }
-    // })
-    //------------------//
-    // app.post('/myItems', async(req, res)=>{
-    //   const myItems = req.body;
-    //   const result = await myItemsCollection.insertOne(myItems);
-    //   res.send(result)
-    // })
-
-     app.get('/myItems', async (req, res)=>{
+    
+     app.get('/myItems', verifyJWT, async (req, res)=>{
+      //  const authHeader = req.headers.authorization;
+      //  console.log(authHeader)
        const email = req.query.email;
        console.log(email)
        const query = {email};
@@ -69,29 +65,14 @@ async function run() {
      })
 
     //post api
-    app.post('/item',async(req, res)=>{
+    app.post('/item', async(req, res)=>{
       const newItem = req.body;
       const tokenInfo = req.headers.authorization;
       console.log(tokenInfo)
       const result = await itemCollection.insertOne(newItem);
       res.send(result);
-      // const [email, accessToken] = tokenInfo.split(" ")
-      // const decoded = verifyToken(accessToken);
-      
-      // if (email === decoded.email){
-      //   const result = await itemCollection.insertOne(newItem);
-      //   res.send(result);
-      // } else{
-      //   res.send({success: 'UnAuthoraized Access'})
-      // }
     });
 
-    // // user login Jwt post api 
-    // app.post('/login', async (req, res)=>{
-    //   const email = req.body;
-    //   const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET);
-    //   res.send({token})
-    // })
 
     //Delete Api
     app.delete('/item/:id', async(req, res)=>{
@@ -100,6 +81,16 @@ async function run() {
       const result = await itemCollection.deleteOne(query);
       res.send(result);
     })
+
+    //Delete MyItem api
+    app.delete('/myItems/:id', async(req, res)=>{
+      const id = req.params.id;
+      const query = {_id: ObjectId(id)};
+      const result = await itemCollection.deleteOne(query);
+      res.send(result);
+    })
+
+
 
     // Update quantity api
     app.put('/quantity/:id', async (req, res) =>{
@@ -120,21 +111,6 @@ async function run() {
 
   }
 }
-
-//verify token
-// function verifyToken(token){
-//   let email;
-//   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function(err, decoded){
-//     if(err){
-//       email = "Invalid Email"
-//     }
-//     if (decoded){
-//       console.log(decoded)
-//       email = decoded
-//     }
-//   })
-//   return email ;
-// }
 
 run().catch(console.dir);
 

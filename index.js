@@ -91,7 +91,6 @@ async function run() {
     })
 
 
-
     // Update quantity api
     app.put('/quantity/:id', async (req, res) =>{
       const id = req.params.id;
@@ -107,10 +106,32 @@ async function run() {
       res.send(result);
     })
 
+    // Jwt post api
+    // app.post('/login', async (req, res)=>{
+    //   const email = req.body;
+    //   const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET);
+    //   res.send({token})
+    // })
+
   } finally {
 
   }
 }
+
+//verify token
+// function verifyToken(token){
+//   let email;
+//   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function(err, decoded){
+//     if(err){
+//       email = "Invalid Email"
+//     }
+//     if (decoded){
+//       console.log(decoded)
+//       email = decoded
+//     }
+//   })
+//   return email ;
+// }
 
 run().catch(console.dir);
 

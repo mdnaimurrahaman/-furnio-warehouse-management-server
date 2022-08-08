@@ -137,3 +137,12 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   console.log("Listening to port", port);
 });
+// run().catch(console.dir);
+
+// app.get("/", (req, res) => {
+//   res.send("running my server");
+// });
+
+// app.listen(port, () => {
+//   console.log("Listening to port", port);
+// });
